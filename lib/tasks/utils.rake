@@ -52,7 +52,7 @@ task :reload_json, [:file_name] => :environment do |_task, args|
     cities = {}
     services = {}
     trips = []
-    buses = []
+    buses = {}
 
     json.each do |trip|
       trip_from = trip['from']
@@ -60,19 +60,20 @@ task :reload_json, [:file_name] => :environment do |_task, args|
       cities[trip_from] = City.new(name: trip_from) if cities[trip_from].nil?
       cities[trip_to] = City.new(name: trip_to) if cities[trip_to].nil?
 
-      bus = Bus.new(number: trip['bus']['number'], model: trip['bus']['model'])
+      bus_number = trip['bus']['number']
+      if buses[bus_number].nil?
+        buses[bus_number] = Bus.new(number: bus_number, model: trip['bus']['model'])
 
-      trip['bus']['services'].each do |service|
-        services[service] = Service.new(name: service) if services[service].nil?
-        bus.buses_services.build(service: services[service])
+        trip['bus']['services'].each do |service|
+          services[service] = Service.new(name: service) if services[service].nil?
+          buses[bus_number].buses_services.build(service: services[service])
+        end
       end
-
-      buses << bus
 
       trips << Trip.new(
         from: cities[trip_from],
         to: cities[trip_to],
-        bus: buses.last,
+        bus: buses[bus_number],
         start_time: trip['start_time'],
         duration_minutes: trip['duration_minutes'],
         price_cents: trip['price_cents'],
@@ -80,8 +81,8 @@ task :reload_json, [:file_name] => :environment do |_task, args|
     end
     City.import cities.values
     Service.import services.values
-    Bus.import buses, recursive: true
-    Trip.import trips
+    Bus.import buses.values, recursive: true, batch_size: 5000
+    Trip.import trips, batch_size: 10000
   end
 
   puts "************* #{Time.now.to_i - start_time} sec; *************"
