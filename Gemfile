@@ -7,6 +7,13 @@ gem 'rails', '~> 5.2.3'
 gem 'pg', '>= 0.18', '< 2.0'
 gem 'puma', '~> 3.11'
 gem 'bootsnap', '>= 1.1.0', require: false
+gem 'activerecord-import'
+gem 'progress_bar'
+gem 'rack-mini-profiler', require: false
+# For memory profiling
+gem 'memory_profiler'
+# For call-stack profiling flamegraphs
+gem 'stackprof'
 
 group :development, :test do
   # Call 'byebug' anywhere in the code to stop execution and get a debugger console
